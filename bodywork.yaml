@@ -21,6 +21,6 @@ stages:
       max_startup_time_seconds: 30
       replicas: 1
       port: 5000
-      ingress: true
+      ingress: false
 logging:
   log_level: INFO
