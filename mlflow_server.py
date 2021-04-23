@@ -34,10 +34,10 @@ def start_mlflow_server(
     backend_store_uri: str,
     default_artifact_root: str
 ) -> None:
-    """[summary]
+    """TODO
 
-    :param backend_store_uri: [description]
-    :param default_artifact_root: [description]
+    :param backend_store_uri: TODO
+    :param default_artifact_root: TODO
     """
     try:
         initialize_backend_stores(backend_store_uri, default_artifact_root)
