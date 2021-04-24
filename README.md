@@ -1,18 +1,69 @@
 # Deploying MLflow to Kubernetes using Bodywork
 
-## Before you get Started
+Although Bodywork is focused on the deployment needs of machine learning projects, it is flexible enough to be capable of deploying nearly any type of Python application. We are going to demonstrate this by using Bodywork to deploy MLflow to Kubernetes, ready for production, in only a few minutes.
+
+MLflow is a popular open-source tool for managing various aspects of the the machine learning lifecycle, such as tracking model metrics or versioning models. It can be used alongside Bodywork's machine learning deployment capabilities, to make for a powerful MLOps stack.
+
+All of the files mentioned below can be found in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repository on GitHub. You can use this repo, together with this guide to deploy MLflow to your Kubernetes cluster. Alternatively, you can use this repo as a template for deploying your own Python application.
+
+Once MLflow is deployed, we will demonstrate the deployment in action by training a model, tracking metrics and storing artefacts in the registry. We will also discuss 
+
+## Before we get Started
 
 TODO
 
 ```shell
+$ python3.8 -m venv .venv
+$ source .venv/bin/activate
 $ pip install \
     bodywork==2.0.2 \
     mlflow==1.14.1 \
-    psycopg2-binary==2.8.6 \
-    boto3==1.17.56
 ```
 
-## Proof of Concept
+## Bodywork as a Generic Deployment Tool
+
+- map Python apps into Kubernetes primitives.
+- distribute projects into pre-built containers on k8s, by pulling project from remote Git repos.
+- analyse single deployment config to generate a deployment plan.
+
+```yaml
+version: "1.0"
+project:
+  name: bodywork-mlflow
+  docker_image: bodyworkml/bodywork-core:latest
+  DAG: server
+stages:
+  server:
+    executable_module_path: mlflow_server.py
+    requirements:
+      - mlflow[extras]==1.14.1
+      - psycopg2-binary==2.8.6
+    secrets:
+      MLFLOW_BACKEND_STORE_URI: mlflow-config
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: mlflow-config
+      AWS_ACCESS_KEY_ID: aws-credentials
+      AWS_SECRET_ACCESS_KEY: aws-credentials
+      AWS_DEFAULT_REGION: aws-credentials
+    cpu_request: 1
+    memory_request_mb: 250
+    service:
+      max_startup_time_seconds: 30
+      replicas: 1
+      port: 5000
+      ingress: false
+logging:
+  log_level: INFO
+```
+
+We can see from `bodywork.yaml` above, that...
+
+## Testing Locally
+
+TODO
+
+### 
+
+TODO
 
 ```shell
 $ export MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db
@@ -20,15 +71,25 @@ $ export MLFLOW_DEFAULT_ARTIFACT_ROUTE=mlflow_artefacts
 $ python mlflow_server.py
 ```
 
-## Preparing for Production with PostgreSQL and Cloud Object Storage
+### Preparing for Production with PostgreSQL and Cloud Object Storage
+
+TODO
 
 ```shell
-$ export MLFLOW_BACKEND_STORE_URI=postgresql://XXX:XXX@XXX.XXX.XXX.rds.amazonaws.com:5432/mlflow
+$ pip install \
+    psycopg2-binary==2.8.6 \
+    boto3==1.17.56
+```
+
+```shell
+$ export MLFLOW_BACKEND_STORE_URI=postgresql://USER_NAME:PASSWORD@HOST_ADDRESS:5432/mlflow
 $ export MLFLOW_DEFAULT_ARTIFACT_ROUTE=s3://bodywork-mlflow-artefacts
 $ python mlflow_server.py
 ```
 
 ## Deploying to Kubernetes
+
+TODO
 
 ```shell
 $ bodywork setup-namespace mlflow
@@ -45,7 +106,7 @@ $ bodywork setup-namespace mlflow
 $ bodywork secret create \
     --namespace=mlflow \
     --name=mlflow-config \
-    --data MLFLOW_BACKEND_STORE_URI=postgresql://XXX:XXX@XXX.XXX.XXX.rds.amazonaws.com:5432/mlflow MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://bodywork-mlflow-artefacts
+    --data MLFLOW_BACKEND_STORE_URI=postgresql://USER_NAME:PASSWORD@HOST_ADDRESS:5432/mlflow MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://bodywork-mlflow-artefacts
 ```
 
 ```shell
@@ -74,3 +135,13 @@ $ pip install \
     tqdm==4.54.1 \
     numpy==1.19.4
 ```
+
+### Accessing MLflow from within a Bodywork Stage
+
+TODO
+
+## Where to go from Here
+
+- Sentry for monitoring.
+- Deploy your own app.
+- Logs
