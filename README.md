@@ -10,7 +10,7 @@ Once we get MLflow deployed, we'll demonstrate it in action by training a model,
 
 ## Before we get Started
 
-Bodywork is distributed as a Python package, that exposes a Command Line Interface (CLI) for configuring Kubernetes to deploy Python projects, directly from remote Git repositories (e.g. GitHub). Start by creating a new Python virtual environment and installing Bodywork.
+Bodywork is distributed as a Python package, that exposes a Command Line Interface (CLI) for configuring Kubernetes to deploy Python projects, directly from remote Git repositories (e.g. GitHub). Start by creating a new Python virtual environment and installing Bodywork,
 
 ```shell
 $ python3.8 -m venv .venv
@@ -24,9 +24,13 @@ If you have never worked with Kubernetes before, then please don't stop here. We
 
 ## Bodywork as a Generic Deployment Tool
 
-- map Python apps into Kubernetes primitives.
-- distribute projects into pre-built containers on k8s, by pulling project from remote Git repos.
-- analyse single deployment config to generate a deployment plan.
+Bodywork enables you to map executable Python modules to Kubernetes primitives: jobs and deployments. All you need to do is add to your project a single configuration file, `bodywork.yaml`, to describe how you want Bodywork to deploy your application - i.e., which executable Python scripts should be run as jobs (with a well defined start and end), and which should be run as service deployments (with no scheduled end).
+
+Based on the contents of `bodywork.yaml`, Bodywork creates a deployment plan and configures Kubernetes to execute it, using pre-built [Bodywork containers](https://hub.docker.com/repository/docker/bodyworkml/bodywork-core) for executing Python modules. Bodywork containers use Git to pull your project's codebase from your remote Git repository, thereby removing the need to build container images and push them to a remote image registry.
+
+Each unit of deployment is referred to as a stage and runs within it's own Bodywork container. You are free to specify as many stages as your project requires. Stages can be executed in sequentially and/or in parallel - you have the flexibility to specify a deployment [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (or workflow). It is precisely this combination of jobs, service deployments and workflows, using Git to distribute your codebase into pre-built container images, that makes Bodywork a powerful tool for deploying machine learning projects. But it will also light work of deploying something simpler, like MLflow.
+
+The `bodywork.yaml` for our MLflow deployment is reproduced below. We will give a brief overview of what it contains - for a complete discussion of how to configure a Bodywork deployment, refer to the [User Guide](https://bodywork.readthedocs.io/en/latest/user_guide/).
 
 ```yaml
 version: "1.0"
