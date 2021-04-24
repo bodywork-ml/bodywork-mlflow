@@ -6,19 +6,21 @@ MLflow is a popular open-source tool for managing various aspects of the the mac
 
 All of the files mentioned below can be found in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repository on GitHub. You can use this repo, together with this guide to deploy MLflow to your Kubernetes cluster. Alternatively, you can use this repo as a template for deploying your own Python application.
 
-Once MLflow is deployed, we will demonstrate the deployment in action by training a model, tracking metrics and storing artefacts in the registry. We will also discuss 
+Once we get MLflow deployed, we'll demonstrate it in action by training a model, tracking metrics and storing artefacts in the registry. We will also discuss how to build Bodywork machine learning pipeline that can interact with MLflow.
 
 ## Before we get Started
 
-TODO
+Bodywork is distributed as a Python package, that exposes a Command Line Interface (CLI) for configuring Kubernetes to deploy Python projects, directly from remote Git repositories (e.g. GitHub). Start by creating a new Python virtual environment and installing Bodywork.
 
 ```shell
 $ python3.8 -m venv .venv
 $ source .venv/bin/activate
-$ pip install \
-    bodywork==2.0.2 \
-    mlflow==1.14.1 \
+$ pip install bodywork==2.0.2
 ```
+
+### Getting Started with Kubernetes
+
+If you have never worked with Kubernetes before, then please don't stop here. We have written a guide to [Getting Started with Kubernetes for MLOps](https://bodywork.readthedocs.io/en/latest/kubernetes/#getting-started-with-kubernetes), that will have you up-and-running with a single-node cluster on your laptop, in under 10 minutes. Should you want to deploy to a cloud-based cluster in the future, you need only to follow the same steps while pointing to your new cluster. This is one of the key advantages of Kubernetes - you can test locally with confidence that your production deployments will behave in the same way.
 
 ## Bodywork as a Generic Deployment Tool
 
@@ -61,7 +63,15 @@ We can see from `bodywork.yaml` above, that...
 
 TODO
 
-### 
+```shell
+$ pip install mlflow==1.14.1
+```
+
+```shell
+$ git clone https://github.com/bodywork-ml/bodywork-mlflow.git
+```
+
+### TODO
 
 TODO
 
