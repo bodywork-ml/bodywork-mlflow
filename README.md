@@ -10,66 +10,7 @@ Once we get MLflow deployed, we'll demonstrate it in action by training a model,
 
 ## TL;DR
 
-If you already have access to a Kubernetes cluster and can access it using Kubectl, then the following steps will deploy MLflow to your cluster. Start by downloading Bodywork from PyPI,
-
-```shell
-$ pip install bodywork
-```
-
-Setup a namespace for use with Bodywork,
-
-```shell
-$ bodywork setup-namespace mlflow
-```
-
-Create a secret that contains values for `MLFLOW_BACKEND_STORE_URI` and `MLFLOW_DEFAULT_ARTIFACT_ROOT`, which will be mounted as environment variables into the containers running MLFlow and used to configure it. If you don't have a database and/or cloud object storage available and just want to play with a toy deployment, then use the defaults shown below.
-
-```shell
-bodywork secret create \
-    --namespace=mlflow \
-    --name=mlflow-config \
-    --data MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db MLFLOW_DEFAULT_ARTIFACT_ROOT=mlflow_artefacts
-```
-
-If you want to use cloud object storage, the create a secret to contain your credentials - e.g., for AWS we would use,
-
-```shell
-bodywork secret create \
-    --namespace=mlflow \
-    --name=aws-credentials \
-    --data AWS_ACCESS_KEY_ID=XX AWS_SECRET_ACCESS_KEY=XX AWS_DEFAULT_REGION=XX
-```
-
-Now deploy MLflow, using the Bodywork deployment described in [this](https://github.com/bodywork-ml/bodywork-mlflow) GitHub repo,
-
-```shell
-$ bodywork deployment create \
-    --namespace=mlflow \
-    --name=initial-deployment \
-    --git-repo-url=https://github.com/bodywork-ml/bodywork-mlflow.git \
-    --git-repo-branch=master \
-    --retries=2
-```
-
-Wait until the deployment has finished and then create a proxy into the cluster,
-
-```shell
-$ kubectl proxy
-```
-
-And open a browser to the MLflow dashboard at,
-
-```text
-$ http://localhost:8001/api/v1/namespaces/mlflow/services/bodywork-mlflow--server/proxy/
-```
-
-Other applications on the cluster can access the tracking server at,
-
-```text
-'http://bodywork-mlflow--server.svc.cluster.local:5000/'
-```
-
-Finished.
+If you already have access to a Kubernetes cluster and can access it using Kubectl from your machine, then install the Bodywork Python package using Pip and head straight to 'Deploying to Kubernetes', down below.
 
 ## Before we get Started
 
@@ -178,28 +119,52 @@ $ python mlflow_server.py
 
 ## Deploying to Kubernetes
 
-TODO
+Setup a namespace for use with Bodywork,
 
 ```shell
 $ bodywork setup-namespace mlflow
 ```
 
-```shell
- $ bodywork secret create \
-    --namespace=mlflow \
-    --name=aws-credentials \
-    --data AWS_ACCESS_KEY_ID=XXX AWS_SECRET_ACCESS_KEY=XXX AWS_DEFAULT_REGION=XXX
-```
+Create a secret that contains values for `MLFLOW_BACKEND_STORE_URI` and `MLFLOW_DEFAULT_ARTIFACT_ROOT`, which will be mounted as environment variables into the containers running MLFlow and used to configure it. If you don't have a database and/or cloud object storage available and just want to play with a toy deployment, then use the defaults shown below.
 
 ```shell
-$ bodywork secret create \
+bodywork secret create \
     --namespace=mlflow \
     --name=mlflow-config \
-    --data MLFLOW_BACKEND_STORE_URI=postgresql://USER_NAME:PASSWORD@HOST_ADDRESS:5432/mlflow MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://bodywork-mlflow-artefacts
+    --data MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db MLFLOW_DEFAULT_ARTIFACT_ROOT=mlflow_artefacts
 ```
+
+If you want to use cloud object storage, the create a secret to contain your credentials - e.g., for AWS we would use,
+
+```shell
+bodywork secret create \
+    --namespace=mlflow \
+    --name=aws-credentials \
+    --data AWS_ACCESS_KEY_ID=XX AWS_SECRET_ACCESS_KEY=XX AWS_DEFAULT_REGION=XX
+```
+
+Now deploy MLflow, using the Bodywork deployment described in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) GitHub repo,
 
 ```shell
 $ bodywork workflow --ns mlflow https://github.com/bodywork-ml/bodywork-mlflow.git master
+```
+
+Wait until the deployment has finished and then create a proxy into the cluster,
+
+```shell
+$ kubectl proxy
+```
+
+And open a browser to the MLflow dashboard at,
+
+```text
+$ http://localhost:8001/api/v1/namespaces/mlflow/services/bodywork-mlflow--server/proxy/
+```
+
+Other applications on the cluster can access the tracking server at,
+
+```text
+'http://bodywork-mlflow--server.svc.cluster.local:5000/'
 ```
 
 ## Testing
