@@ -9,12 +9,14 @@ stages:
     requirements:
       - mlflow[extras]==1.14.1
       - psycopg2-binary==2.8.6
+      - sentry-sdk==0.20.3
     secrets:
       MLFLOW_BACKEND_STORE_URI: mlflow-config
       MLFLOW_DEFAULT_ARTIFACT_ROOT: mlflow-config
       AWS_ACCESS_KEY_ID: aws-credentials
       AWS_SECRET_ACCESS_KEY: aws-credentials
       AWS_DEFAULT_REGION: aws-credentials
+      SENTRY_DSN: sentry-integration
     cpu_request: 1
     memory_request_mb: 250
     service:
