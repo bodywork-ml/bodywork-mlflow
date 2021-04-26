@@ -64,10 +64,12 @@ if __name__ == '__main__':
 
     try:
         sentry_dsn = os.environ.get('SENTRY_DSN')
-        sentry_sdk.init(sentry_sdk, traces_sample_rate=1.0)
+        sentry_sdk.init(sentry_dsn, traces_sample_rate=1.0)
     except KeyError:
         log.warning('environment variable SENTRY_DSN cannot be found - '
                     'Sentry not setup to monitor service')
+    except Exception:
+        log.warning('Sentry setup failed - monitoring not setup')
 
     try:
         backend_store_uri = os.environ['MLFLOW_BACKEND_STORE_URI']
