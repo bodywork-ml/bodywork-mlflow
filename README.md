@@ -6,7 +6,7 @@ MLflow is a popular open-source tool for managing various aspects of the the mac
 
 All of the files mentioned below can be found in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repository on GitHub. You can use this repo, together with this guide to deploy MLflow to your Kubernetes cluster. Alternatively, you can use this repo as a template for deploying your own Python project.
 
-Once we get MLflow deployed, we'll demonstrate it in action by training a model, tracking metrics and storing artefacts in the model registry. We'll also discuss how to build Bodywork machine learning pipelines that interact with MLflow.
+Once we get MLflow deployed, we'll demonstrate it in action by training a model, tracking metrics and storing artefacts in the model registry. We'll also discuss patterns for integrating MLflow with Bodywork machine learning pipelines.
 
 ## TL;DR
 
@@ -208,7 +208,15 @@ $ http://localhost:8001/api/v1/namespaces/mlflow/services/bodywork-mlflow--serve
 
 ## MLflow Demo
 
-TODO - use `mlflow_demo.ipynb`
+The [mlflow_demo.ipynb](https://github.com/bodywork-ml/bodywork-mlflow/blob/master/mlflow_demo.ipynb) notebook within the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repo, contains an end-to-end demo of how to connect to the MLflow tracking server deployed above, and then,
+
+- train a model, using MLflow to track performance metrics during hyper-paramter tuning;
+- find the most optimal set of parameters;
+- persist the optimal model in the model registry and push it to 'production';
+- persist additional model-related artefacts (feature names and class labels, stored in text files); and finally,
+- how to retrieve the latest 'production' model version, from the model registry.
+
+If you want to run this notebook locally, the you'll need to install the following Python packages,
 
 ```text
 $ pip install \
@@ -219,9 +227,82 @@ $ pip install \
     numpy==1.19.4
 ```
 
-### Accessing MLflow from within a Bodywork Stage
+And then fire-up the Jupyter notebook,
 
-TODO
+```text
+$ jupyter lab
+```
+
+### Patterns for Integrating MLflow with Bodywork Pipelines
+
+Kubernetes greatly simplifies networking between services in the cluster. From **within** the cluster, you will be able to access the tracking server using the following URL,
+
+```text
+http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000
+```
+
+Any Bodywork stage can make use of the tracking server at this location, by setting the tracking URI (as we did in the demo notebook),
+
+```python
+import mlflow
+
+mlflow.set_tracking_uri('http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000')
+```
+
+This enables us to revisit the [Bodywork Quickstart Tutorial](https://bodywork.readthedocs.io/en/latest/quickstart_serve_model/) for serving a model, that also provides predictions for the iris classification task used in the MLflow demo notebook. In this example deployment, we used the joblib package to load a model that was persisted as an artefact in the project repo (not a best-practice, albeit pragmatic). We can now modify [service.py](https://github.com/bodywork-ml/bodywork-serve-model-project/blob/master/scoring_service/service.py) to collect the latest 'production' model from MLflow. If we assume that this is the same 'production' version as the one trained in the MLflow demo notebook, then all we need to do is swap this unit of code,
+
+```python
+import numpy as np
+from flask import Flask, jsonify, make_response, request, Response
+from joblib import load
+from sklearn.base import BaseEstimator
+
+MODEL_PATH = 'classification_model.joblib'
+
+# web API definition code
+# ...
+
+if __name__ == '__main__':
+    model = load(MODEL_PATH)
+    print(f'loaded model={model}')
+    print(f'starting API server')
+    app.run(host='0.0.0.0', port=5000)
+```
+
+For this one,
+
+```python
+import mlflow
+import numpy as np
+from flask import Flask, jsonify, make_response, request, Response
+from sklearn.base import BaseEstimator
+
+MODEL_NAME = 'iris_classification'
+
+# web API definition code
+# ...
+
+if __name__ == '__main__':
+    mlflow.set_tracking_uri('http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000')
+    model = mlflow.sklearn.load_model(model_uri=f'models:/{MODEL_NAME}/Production')
+    print(f'loaded model={model}')
+    print(f'starting API server')
+    app.run(host='0.0.0.0', port=5000)
+```
+
+We can also take this one step further and create a Bodywork cronjob, that will re-deploy (and hence re-run the server start-up code), on a schedule. For example, issuing the following command,
+
+```text
+$ bodywork cronjob create \
+    --namespace=scoring-service \
+    --name=scoring-service-deployment-pipeline \
+    --schedule="0 * * * *" \
+    --git-repo-url=https://github.com/bodywork-ml/bodywork-serve-model-project \
+    --git-repo-branch=master \
+    --retries=2
+```
+
+Will cause Bodywork to trigger a rolling re-deployment of the prediction web API, each time loading the most recent version of the model that has been pushed to 'production' - either manually, or as part of an [automated re-training pipeline]https://bodywork.readthedocs.io/en/latest/quickstart_ml_pipeline/). Thereby demonstrating how Bodywork can be used to implement continuous delivery for machine learning.
 
 ## Where to go from Here
 
