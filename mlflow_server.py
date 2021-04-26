@@ -6,7 +6,6 @@ import logging
 import os
 import sys
 
-import sentry_sdk
 from mlflow.server import _run_server
 from mlflow.server.handlers import initialize_backend_stores
 from mlflow.utils.process import ShellCommandException
@@ -63,13 +62,13 @@ if __name__ == '__main__':
     log = configure_logger()
 
     try:
+        import sentry_sdk
         sentry_dsn = os.environ.get('SENTRY_DSN')
         sentry_sdk.init(sentry_dsn, traces_sample_rate=1.0)
+    except ModuleNotFoundError:
+        log.warning('Sentry SDK not available - monitoring not enabled')
     except KeyError:
-        log.warning('environment variable SENTRY_DSN cannot be found - '
-                    'Sentry not setup to monitor service')
-    except Exception:
-        log.warning('Sentry setup failed - monitoring not setup')
+        log.warning('environment variable SENTRY_DSN not found - monitoring not enabled')
 
     try:
         backend_store_uri = os.environ['MLFLOW_BACKEND_STORE_URI']
@@ -83,6 +82,7 @@ if __name__ == '__main__':
         log.error('environment variable MLFLOW_DEFAULT_ARTIFACT_ROUTE cannot be found')
         sys.exit(1)
 
+    log.info('starting MLflow server')
     start_mlflow_server(
         backend_store_uri=backend_store_uri,
         default_artifact_root=default_artifact_root
