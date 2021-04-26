@@ -1,5 +1,6 @@
 """
-TODO
+Custom start-up script for MLflow. This is based on mlflow.cli.server,
+from the MLflow Python package.
 """
 import logging
 import os
@@ -34,10 +35,10 @@ def start_mlflow_server(
     backend_store_uri: str,
     default_artifact_root: str
 ) -> None:
-    """TODO
+    """Start the server.
 
-    :param backend_store_uri: TODO
-    :param default_artifact_root: TODO
+    :param backend_store_uri: URI to a database back-end.
+    :param default_artifact_root: Location to use for storing artefacts.
     """
     try:
         initialize_backend_stores(backend_store_uri, default_artifact_root)
@@ -54,7 +55,7 @@ def start_mlflow_server(
             workers=1
         )
     except ShellCommandException as e:
-        log.error(f'Running the mlflow server failed. Please see the logs above for details - {e}')
+        log.error(f'Running the mlflow server failed - {e}')
         sys.exit(1)
 
 
