@@ -304,8 +304,41 @@ $ bodywork cronjob create \
 
 Will cause Bodywork to trigger a rolling re-deployment of the prediction web API, each time loading the most recent version of the model that has been pushed to 'production' - either manually, or as part of an [automated re-training pipeline]https://bodywork.readthedocs.io/en/latest/quickstart_ml_pipeline/). Thereby demonstrating how Bodywork can be used to implement continuous delivery for machine learning.
 
-## Where to go from Here
+## Optional Extras - Application Monitoring with Sentry
 
-- Sentry for monitoring.
-- Deploy your own app.
-- Logs
+Here are Bodywork HQ, we are becoming fans of using [Sentry](https://sentry.io) for monitoring Python services and generating alerts. Sentry is free for individual users, but charges for business use (i.e. Teams). We have setup `mlflow_server.py` to configure Sentry, if it has been installed and configured for your deployment.
+
+To ensure that Sentry gets installed in the Bodywork containers running the MLflow service replicas, modify `bodywork.yaml` to include the Sentry Python client in the list of requirements.
+
+```yaml
+...
+stages:
+  server:    
+    ...
+    requirements:
+      - ...
+      - sentry-sdk==0.20.3
+```
+
+Then, modify `bodywork.yaml` again to retrieve the Sentry client key from a Kubernetes secret called `sentry-integration`,
+
+```yaml
+...
+stages:
+  server:    
+    ...
+    secrets:
+      ...
+      SENTRY_DSN: sentry-integration
+```
+
+And finally, create the Kubernetes secret containing your secret client key.
+
+```text
+bodywork secret create \
+    --namespace=mlflow \
+    --name=sentry-integration \
+    --data SENTRY_DSN=YOUR_SENTRY_CLIENT_KEY
+```
+
+Congratulations - you now have a production-worthy deployment of MLflow!
