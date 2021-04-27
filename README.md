@@ -18,7 +18,7 @@ Bodywork enables you to map executable Python modules to Kubernetes primitives -
 
 Based on the contents of `bodywork.yaml`, Bodywork creates a deployment plan and configures Kubernetes to execute it, using pre-built [Bodywork containers](https://hub.docker.com/repository/docker/bodyworkml/bodywork-core) for running Python modules. Bodywork containers use Git to pull your project's codebase from your remote Git repository, removing the need to build and manage bespoke container images.
 
-Each unit of deployment is referred to as a stage and runs using it's own Bodywork container. You are free to specify as many stages as your project requires. Stages can be executed sequentially and/or in parallel - you have the flexibility to specify a deployment [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (or workflow).
+Each unit of deployment is referred to as a stage and runs using it's own Bodywork container. You are free to specify as many stages as your project requires. Stages can be executed sequentially and/or in parallel - you have the flexibility to specify a deployment workflow (or [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph)).
 
 It is precisely this combination of jobs, service-deployments, workflows and using Git repos as a means of distributing your codebase into pre-built container images, that makes Bodywork a powerful tool for quickly deploying machine learning projects. But it will also easily deploying something simpler, like MLflow.
 
