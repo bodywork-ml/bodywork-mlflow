@@ -319,7 +319,7 @@ Will cause Bodywork to trigger a rolling re-deployment of the prediction web API
 
 ## Optional Extras - Application Monitoring with Sentry
 
-Here are Bodywork HQ, we are becoming fans of using [Sentry](https://sentry.io) for monitoring Python services and generating alerts. Sentry is free for individual users, but charges for business use (i.e. Teams). We have setup `mlflow_server.py` to configure Sentry, if it has been installed and configured for your deployment.
+Here at Bodywork HQ, we are becoming fans of using [Sentry](https://sentry.io) for monitoring Python services and generating alerts. Sentry is free for individual users, but charges for business use (i.e. Teams). We have setup `mlflow_server.py` to configure Sentry, if it has been installed and configured for your deployment.
 
 To ensure that Sentry gets installed in the Bodywork containers running the MLflow service replicas, modify `bodywork.yaml` to include the Sentry Python client in the list of requirements.
 
