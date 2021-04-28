@@ -1,6 +1,6 @@
 # Deploying MLflow to Kubernetes using Bodywork
 
-Although Bodywork is focused on deploying machine learning projects, it is flexible enough to deploy almost any type of Python project. We're going to demonstrate this by using Bodywork to deploy MLflow to Kubernetes, ready for production, in only a few minutes.
+Although Bodywork is focused on deploying machine learning projects, it is flexible enough to deploy almost any type of Python project. We're going to demonstrate this by using Bodywork to deploy a production-ready instance of MLflow (a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app), to Kubernetes, in only a few minutes.
 
 MLflow is a popular open-source tool for managing various aspects of the the machine learning lifecycle, such as tracking training metrics or versioning models. It can be used alongside Bodywork's machine learning deployment capabilities, to make for a powerful open-source MLOps stack.
 
@@ -18,7 +18,7 @@ Bodywork enables you to map executable Python modules to Kubernetes primitives -
 
 Based on the contents of `bodywork.yaml`, Bodywork creates a deployment plan and configures Kubernetes to execute it, using pre-built [Bodywork containers](https://hub.docker.com/repository/docker/bodyworkml/bodywork-core) for running Python modules. Bodywork containers use Git to pull your project's codebase from your remote Git repository, removing the need to build and manage bespoke container images.
 
-Each unit of deployment is referred to as a stage and runs using it's own Bodywork container. You are free to specify as many stages as your project requires. Stages can be executed sequentially and/or in parallel - you have the flexibility to specify a deployment workflow (or [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph)).
+Each unit of deployment is referred to as a stage and runs using it's own Bodywork container. You are free to specify as many stages as your project requires. Stages can be executed sequentially and/or in parallel - you have the flexibility to specify a deployment workflow (or [DAG](https://bodywork.readthedocs.io/en/latest/key_concepts/)).
 
 It is precisely this combination of jobs, service-deployments, workflows and using Git repos as a means of distributing your codebase into pre-built container images, that makes Bodywork a powerful tool for quickly deploying machine learning projects. But it will also easily deploying something simpler, like MLflow.
 
@@ -120,7 +120,7 @@ And open a browser at `http://localhost:5000` to access the MLflow UI.
 
 ### Preparing for Production with PostgreSQL and Cloud Object Storage
 
-To provide concurrent connections to multiple users from multiple service replicas, MLflow will need to use a database service that can support this scenario, as a backend store. Similarly, to make model artefacts available to anyone, it will need to use a common storage service. We are AWS users here at Bodywork HQ, so we have opted to use S3 for storing artefacts and an AWS managed Postgres database instance. Managed cloud services allow you to easily scale-out when required and also offer the convenience of automated backups, etc. (albeit, at a price).
+To provide concurrent connections to multiple users from multiple service replicas, MLflow will need to use a database service that can support this scenario, as a backend store. Similarly, to make model artefacts available to anyone, it will need to use a common storage service. We are AWS users here at Bodywork HQ, so we have opted to use S3 for storing artefacts and an AWS managed Postgres database instance. Managed cloud services allow you to easily scale-out when required and also offer the convenience of automated backups, upgrades, etc. (albeit, at a price).
 
 To test this setup locally, we need to install some more Python packages,
 
@@ -221,7 +221,7 @@ We will use Kubectl proxy as a secure means of authenticating with the cluster, 
 
 ## MLflow Demo
 
-The [mlflow_demo.ipynb](https://github.com/bodywork-ml/bodywork-mlflow/blob/master/mlflow_demo.ipynb) notebook within the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repo, contains an end-to-end demo of how to connect to the MLflow tracking server deployed above. It then demonstrates how to,
+The [mlflow_demo.ipynb](https://github.com/bodywork-ml/bodywork-mlflow/blob/master/mlflow_demo.ipynb) notebook within the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repo, contains an end-to-end demo of how to connect to the MLflow tracking server deployed above. It demonstrates how to,
 
 - train a model, using MLflow to track performance metrics during hyper-paramter tuning;
 - find the most optimal set of parameters;
@@ -240,7 +240,7 @@ $ pip install \
     numpy==1.19.4
 ```
 
-And then fire-up the Jupyter Lab,
+And then fire-up Jupyter Lab,
 
 ```text
 $ jupyter lab
@@ -315,7 +315,7 @@ $ bodywork cronjob create \
     --retries=2
 ```
 
-Will cause Bodywork to trigger a rolling re-deployment of the prediction web API, each time loading the most recent version of the model that has been pushed to 'production' - either manually, or as part of an [automated re-training pipeline](https://bodywork.readthedocs.io/en/latest/quickstart_ml_pipeline/). Thereby demonstrating how Bodywork can be used to implement continuous delivery for machine learning.
+Will cause Bodywork to trigger a rolling re-deployment of the prediction web API, every hour. Each time, it will load the most recent version of the model that has been pushed to 'production' - either manually, or as part of an [automated re-training pipeline](https://bodywork.readthedocs.io/en/latest/quickstart_ml_pipeline/). Thereby demonstrating how Bodywork can be used to implement continuous delivery for machine learning.
 
 ## Optional Extras - Application Monitoring with Sentry
 
