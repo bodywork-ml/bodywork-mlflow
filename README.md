@@ -34,7 +34,7 @@ stages:
   server:
     executable_module_path: mlflow_server.py
     requirements:
-      - mlflow[extras]==1.14.1
+      - mlflow[extras]==1.16.0
       - psycopg2-binary==2.8.6
     secrets:
       MLFLOW_BACKEND_STORE_URI: mlflow-config
@@ -87,7 +87,7 @@ Should you want to deploy to a cloud-based cluster in the future, you need only 
 Before we deploy to our Kubernetes cluster, we'll configure and run the server locally. Start by installing MLFlow,
 
 ```text
-$ pip install mlflow==1.14.1
+$ pip install mlflow==1.16.0
 ```
 
 And then cloning the [GitHub repo](https://github.com/bodywork-ml/bodywork-mlflow) containing the MLflow deployment project,

@@ -7,7 +7,7 @@ stages:
   server:
     executable_module_path: mlflow_server.py
     requirements:
-      - mlflow[extras]==1.14.1
+      - mlflow[extras]==1.16.0
       - psycopg2-binary==2.8.6
     secrets:
       MLFLOW_BACKEND_STORE_URI: mlflow-config
