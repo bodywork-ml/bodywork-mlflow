@@ -1,3 +1,8 @@
+<div align="center">
+<img src="https://bodywork-media.s3.eu-west-2.amazonaws.com/bodywork-mlflow-logo.png" width="450"/>
+</div>
+
+
 # Deploying MLflow to Kubernetes using Bodywork
 
 Although Bodywork is focused on deploying machine learning projects, it is flexible enough to deploy almost any type of Python project. We're going to demonstrate this by using Bodywork to deploy a production-ready instance of MLflow (a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app), to Kubernetes, in only a few minutes.
