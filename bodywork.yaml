@@ -17,7 +17,7 @@ stages:
       AWS_ACCESS_KEY_ID: aws-credentials
       AWS_SECRET_ACCESS_KEY: aws-credentials
       AWS_DEFAULT_REGION: aws-credentials
-    cpu_request: 0.1
+    cpu_request: 1
     memory_request_mb: 250
     service:
       max_startup_time_seconds: 120
