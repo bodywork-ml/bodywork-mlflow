@@ -1,8 +1,9 @@
-version: "1.0"
-project:
+version: "1.1"
+pipeline:
   name: bodywork-mlflow
-  docker_image: bodyworkml/bodywork-core:latest
+  docker_image: bodyworkml/bodywork-core:3.0
   DAG: server
+  secrets_group: prod
 stages:
   server:
     executable_module_path: mlflow_server.py
@@ -18,7 +19,7 @@ stages:
     cpu_request: 0.1
     memory_request_mb: 250
     service:
-      max_startup_time_seconds: 30
+      max_startup_time_seconds: 120
       replicas: 1
       port: 5000
       ingress: false
