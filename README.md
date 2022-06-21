@@ -188,7 +188,7 @@ $ bodywork validate --check-files
 Create a Kubernetes secret that contains values for `MLFLOW_BACKEND_STORE_URI` and `MLFLOW_DEFAULT_ARTIFACT_ROOT`, to be mounted as environment variables into the containers running MLflow. If you don't have a database and/or cloud object storage available and just want to play with a toy deployment, then use the defaults shown below.
 
 ```text
-bodywork create secret mlflow-config \
+$ bodywork create secret mlflow-config \
     --group prod \
     --data MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db \
     --data MLFLOW_DEFAULT_ARTIFACT_ROOT=mlflow_artefacts
@@ -197,7 +197,7 @@ bodywork create secret mlflow-config \
 If you want to use cloud object storage, then create a secret to contain your cloud access credentials - e.g., for AWS we would use,
 
 ```text
-bodywork create secret aws-credentials \
+$ bodywork create secret aws-credentials \
     --group prod \
     --data AWS_ACCESS_KEY_ID=XX \
     --data AWS_SECRET_ACCESS_KEY=XX \
@@ -354,7 +354,7 @@ stages:
 Create the Kubernetes secret containing your secret client key.
 
 ```text
-bodywork create secret sentry-integration \
+$ bodywork create secret sentry-integration \
     --group prod \
     --data SENTRY_DSN=YOUR_SENTRY_CLIENT_KEY
 ```
