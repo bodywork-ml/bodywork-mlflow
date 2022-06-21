@@ -30,16 +30,21 @@ It is precisely this combination of jobs, service-deployments, workflows and usi
 The `bodywork.yaml` for our MLflow deployment is reproduced below. In what follows we will give a brief overview of the deployment it describes.
 
 ```yaml
-version: "1.0"
-project:
+version: "1.1"
+pipeline:
   name: bodywork-mlflow
-  docker_image: bodyworkml/bodywork-core:latest
+  docker_image: bodyworkml/bodywork-core:3.0
   DAG: server
+  secrets_group: prod
 stages:
   server:
     executable_module_path: mlflow_server.py
     requirements:
-      - mlflow[extras]==1.16.0
+      - mlflow==1.16.0
+      - scikit-learn
+      - pyarrow
+      - boto3
+      - protobuf==3.6.0
       - psycopg2-binary==2.8.6
     secrets:
       MLFLOW_BACKEND_STORE_URI: mlflow-config
@@ -50,7 +55,7 @@ stages:
     cpu_request: 1
     memory_request_mb: 250
     service:
-      max_startup_time_seconds: 30
+      max_startup_time_seconds: 240
       replicas: 1
       port: 5000
       ingress: false
@@ -58,9 +63,10 @@ logging:
   log_level: INFO
 ```
 
-- `project.name` - the name of the project, used to name Kubernetes resources created by the deployment.
-- `project.docker_image` - the container image to use for running your Python executables - must be hosted from a public Docker Hub repository.
-- `project.DAG` - the deployment workflow. For this project, we have just one 'stage' to deploy, which we have named 'server'.
+- `pipeline.name` - the name of the pipeline, used to name Kubernetes resources created by the deployment.
+- `pipeline.docker_image` - the container image to use for running your Python executables - must be hosted from a public Docker Hub repository.
+- `pipeline.DAG` - the deployment workflow. For this project, we have just one 'stage' to deploy, which we have named 'server'.
+- `pipeline.secrets_group` - the group in which to look for the secrets - e.g., 'dev', 'prod', etc.
 - `stages.server` - a deployment stage object, that we have named 'server'. The key-value pairs that follow, describe how 'server' will be deployed by Bodywork.
 - `stages.server.executable_module_path` - path to the executable Python module within the project's Git repo, that you want Bodywork to run for this stage.
 - `stages.server.requirements` - a list of Python package dependencies, required by the executable Python module. These will be installed using Pip from inside the Bodywork container, when it is created.
@@ -76,23 +82,23 @@ For a complete discussion of how to configure a Bodywork deployment, refer to th
 Bodywork is distributed as a Python package, that exposes a Command Line Interface (CLI) for configuring Kubernetes to deploy Python projects, directly from remote Git repositories (e.g. GitHub). Start by creating a new Python virtual environment and installing Bodywork,
 
 ```text
-$ python3.8 -m venv .venv
+$ python3.9 -m venv .venv
 $ source .venv/bin/activate
-$ pip install bodywork==2.0.3
+$ pip install bodywork
 ```
 
 ### Getting Started with Kubernetes
 
-If you have never worked with Kubernetes before, then please don't stop here. We have written a guide to [Getting Started with Kubernetes for MLOps](https://bodywork.readthedocs.io/en/latest/kubernetes/#getting-started-with-kubernetes), that will explain the basic concepts and have you up-and-running with a single-node cluster on your machine, in under 10 minutes.
+If you have never worked with Kubernetes before, then please don't stop here. We have written a [Quickstart Guide to Kubernetes for MLOps](https://bodywork.readthedocs.io/en/latest/kubernetes/#quickstart), that will explain the basic concepts and have you up-and-running with a single-node cluster on your machine, in under 10 minutes.
 
 Should you want to deploy to a cloud-based cluster in the future, you need only to follow the same steps while pointing to your new cluster. This is one of the key advantages of Kubernetes - you can test locally with confidence that your production deployments will behave in the same way.
 
 ## Configuring the MLflow Tracking Server
 
-Before we deploy to our Kubernetes cluster, we'll configure and run the server locally. Start by installing MLFlow,
+Before we deploy to our Kubernetes cluster, we'll configure and run the server locally. Start by installing MLFlow as defined in `reqirements.txt`,
 
 ```text
-$ pip install mlflow==1.16.0
+$ pip install -r requirements.txt
 ```
 
 And then cloning the [GitHub repo](https://github.com/bodywork-ml/bodywork-mlflow) containing the MLflow deployment project,
@@ -165,10 +171,10 @@ As before, open a browser at `http://localhost:5000` to access the MLflow UI.
 
 ## Deploying to Kubernetes
 
-Start by configuring a new namespace for use with Bodywork,
+Start by configuring your cluster for use with Bodywork,
 
 ```text
-$ bodywork setup-namespace mlflow
+$ bodywork configure-cluster
 ```
 
 Then check the `bodywork.yaml` for errors,
@@ -182,28 +188,26 @@ $ bodywork validate --check-files
 Create a Kubernetes secret that contains values for `MLFLOW_BACKEND_STORE_URI` and `MLFLOW_DEFAULT_ARTIFACT_ROOT`, to be mounted as environment variables into the containers running MLflow. If you don't have a database and/or cloud object storage available and just want to play with a toy deployment, then use the defaults shown below.
 
 ```text
-bodywork secret create \
-    --namespace=mlflow \
-    --name=mlflow-config \
-    --data MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db MLFLOW_DEFAULT_ARTIFACT_ROOT=mlflow_artefacts
+$ bodywork create secret mlflow-config \
+    --group prod \
+    --data MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db \
+    --data MLFLOW_DEFAULT_ARTIFACT_ROOT=mlflow_artefacts
 ```
 
 If you want to use cloud object storage, then create a secret to contain your cloud access credentials - e.g., for AWS we would use,
 
 ```text
-bodywork secret create \
-    --namespace=mlflow \
-    --name=aws-credentials \
-    --data AWS_ACCESS_KEY_ID=XX AWS_SECRET_ACCESS_KEY=XX AWS_DEFAULT_REGION=XX
+$ bodywork create secret aws-credentials \
+    --group prod \
+    --data AWS_ACCESS_KEY_ID=XX \
+    --data AWS_SECRET_ACCESS_KEY=XX \
+    --data AWS_DEFAULT_REGION=XX
 ```
 
 Now deploy MLflow, using the Bodywork deployment described in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) GitHub repo,
 
 ```text
-$ bodywork workflow \
-    --namespace mlflow \
-    https://github.com/bodywork-ml/bodywork-mlflow.git
-    master
+$ bodywork create deployment https://github.com/bodywork-ml/bodywork-mlflow.git
 ```
 
 This will run the workflow-controller (locally) to orchestrate the deployment and will stream logs to stdout.
@@ -219,7 +223,7 @@ $ kubectl proxy
 Now open a browser to the location of the MLflow service on your cluster,
 
 ```http
-$ http://localhost:8001/api/v1/namespaces/mlflow/services/bodywork-mlflow--server/proxy/
+$ http://localhost:8001/api/v1/namespaces/bodywork-mlflow/services/server/proxy/
 ```
 
 We will use Kubectl proxy as a secure means of authenticating with the cluster, as MLflow provides no mechanism for this out-of-the-box.
@@ -256,7 +260,7 @@ $ jupyter lab
 Kubernetes greatly simplifies networking between services in the cluster. From **within** the cluster, you will be able to access the tracking server using the following URL,
 
 ```text
-http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000
+http://server.bodywork-mlflow.svc.cluster.local:5000
 ```
 
 Any Bodywork stage can make use of the tracking server at this location, by setting the tracking URI (as we did in the demo notebook),
@@ -264,7 +268,7 @@ Any Bodywork stage can make use of the tracking server at this location, by sett
 ```python
 import mlflow
 
-mlflow.set_tracking_uri('http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000')
+mlflow.set_tracking_uri('http://server.bodywork-mlflow.svc.cluster.local:5000')
 ```
 
 This enables us to revisit the [Bodywork Quickstart Tutorial](https://bodywork.readthedocs.io/en/latest/quickstart_serve_model/) for serving a model. This project also provides predictions for the iris classification task, as used in the MLflow demo notebook. In this example deployment, we used the joblib package to load a model that was persisted as an artefact in the project's repo (not a best-practice, albeit pragmatic). We can now modify [service.py](https://github.com/bodywork-ml/bodywork-serve-model-project/blob/master/scoring_service/service.py) to collect the latest 'production' model from MLflow. If we assume that this is the same 'production' version as the one trained in the MLflow demo notebook, then all we need to do is swap these units of code,
@@ -301,7 +305,7 @@ MODEL_NAME = 'iris_classification'
 # ...
 
 if __name__ == '__main__':
-    mlflow.set_tracking_uri('http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000')
+    mlflow.set_tracking_uri('http://server.bodywork-mlflow.svc.cluster.local:5000')
     model = mlflow.sklearn.load_model(model_uri=f'models:/{MODEL_NAME}/Production')
     print(f'loaded model={model}')
     print(f'starting API server')
@@ -311,12 +315,9 @@ if __name__ == '__main__':
 We can also take this one step further and create a Bodywork cronjob, that will re-deploy (and hence re-run the server start-up code), on a schedule. For example, issuing the following command,
 
 ```text
-$ bodywork cronjob create \
-    --namespace=scoring-service \
+$ bodywork create cronjob https://github.com/bodywork-ml/bodywork-serve-model-project \
     --name=scoring-service-deployment-pipeline \
     --schedule="0 * * * *" \
-    --git-repo-url=https://github.com/bodywork-ml/bodywork-serve-model-project \
-    --git-repo-branch=master \
     --retries=2
 ```
 
@@ -353,21 +354,15 @@ stages:
 Create the Kubernetes secret containing your secret client key.
 
 ```text
-bodywork secret create \
-    --namespace=mlflow \
-    --name=sentry-integration \
+$ bodywork create secret sentry-integration \
+    --group prod \
     --data SENTRY_DSN=YOUR_SENTRY_CLIENT_KEY
 ```
 
 Finally, re-deploy the server,
 
 ```text
-$ bodywork deployment create \
-    --namespace=mlflow \
-    --name=update-deployment \
-    --git-repo-url=https://github.com/bodywork-ml/bodywork-mlflow.git \
-    --git-repo-branch=master \
-    --retries=2
+$ bodywork update deployment https://github.com/bodywork-ml/bodywork-mlflow.git
 ```
 
 Which we trigger remotely this time, as there is no need observe the logs as they are generated.

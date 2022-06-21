@@ -1,13 +1,18 @@
-version: "1.0"
-project:
+version: "1.1"
+pipeline:
   name: bodywork-mlflow
-  docker_image: bodyworkml/bodywork-core:latest
+  docker_image: bodyworkml/bodywork-core:3.0
   DAG: server
+  secrets_group: prod
 stages:
   server:
     executable_module_path: mlflow_server.py
     requirements:
-      - mlflow[extras]==1.16.0
+      - mlflow==1.16.0
+      - scikit-learn
+      - pyarrow
+      - boto3
+      - protobuf==3.6.0
       - psycopg2-binary==2.8.6
     secrets:
       MLFLOW_BACKEND_STORE_URI: mlflow-config
@@ -15,10 +20,10 @@ stages:
       AWS_ACCESS_KEY_ID: aws-credentials
       AWS_SECRET_ACCESS_KEY: aws-credentials
       AWS_DEFAULT_REGION: aws-credentials
-    cpu_request: 0.1
+    cpu_request: 1
     memory_request_mb: 250
     service:
-      max_startup_time_seconds: 30
+      max_startup_time_seconds: 240
       replicas: 1
       port: 5000
       ingress: false
