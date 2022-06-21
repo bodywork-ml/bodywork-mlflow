@@ -8,7 +8,10 @@ stages:
   server:
     executable_module_path: mlflow_server.py
     requirements:
-      - mlflow[extras]==1.16.0
+      - mlflow==1.16.0
+      - scikit-learn
+      - pyarrow
+      - boto3
       - protobuf==3.6.0
       - psycopg2-binary==2.8.6
     secrets:
