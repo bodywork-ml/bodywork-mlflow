@@ -5,11 +5,11 @@
 
 # Deploying MLflow to Kubernetes using Bodywork
 
-Although Bodywork is focused on deploying machine learning projects, it is flexible enough to deploy almost any type of Python pipeline. We're going to demonstrate this by using Bodywork to deploy a production-ready instance of MLflow (a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app), to Kubernetes, in only a few minutes.
+Although Bodywork is focused on deploying machine learning projects, it is flexible enough to deploy almost any type of Python project. We're going to demonstrate this by using Bodywork to deploy a production-ready instance of MLflow (a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app), to Kubernetes, in only a few minutes.
 
 MLflow is a popular open-source tool for managing various aspects of the the machine learning lifecycle, such as tracking training metrics or versioning models. It can be used alongside Bodywork's machine learning deployment capabilities, to make for a powerful open-source MLOps stack.
 
-All of the files mentioned below can be found in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repository on GitHub. You can use this repo, together with this guide to deploy MLflow to your Kubernetes cluster. Alternatively, you can use this repo as a template for deploying your own Python pipeline.
+All of the files mentioned below can be found in the [bodywork-mlflow](https://github.com/bodywork-ml/bodywork-mlflow) repository on GitHub. You can use this repo, together with this guide to deploy MLflow to your Kubernetes cluster. Alternatively, you can use this repo as a template for deploying your own Python project.
 
 Once we get MLflow deployed, we'll demonstrate it in action by training a model, tracking metrics and storing artefacts in the model registry. We'll also discuss patterns for integrating MLflow with Bodywork machine learning pipelines and how you can add monitoring and alerting to the deployment, by integrating with [Sentry](https://sentry.io).
 
